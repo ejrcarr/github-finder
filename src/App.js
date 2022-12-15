@@ -1,39 +1,48 @@
-import React, { Component } from 'react';
+import React, { Fragment, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NavBar from './components/layout/NavBar';
 import Users from './components/users/Users';
+import User from './components/users/User';
 import Search from './components/users/Search';
-import axios from 'axios';
+import Alert from './components/layout/Alert';
+import About from './components/pages/About';
+import GithubState from './context/github/GithubState';
 import './App.css';
 
-class App extends Component {
-	state = {
-		users: [],
-		loading: false,
+const App = () => {
+	const [alert, setAlert] = useState(null);
+
+	const showAlert = (message, type) => {
+		setAlert({ message, type });
+
+		setTimeout(() => setAlert(null), 5000);
 	};
 
-	searchUsers = async (text) => {
-		this.setState({ loading: true });
-		const res = await axios.get(`https://api.github.com/search/users?q=${text}&
-      client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&
-      client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`);
-		this.setState({ users: res.data.items, loading: false });
-	};
-
-	clearUsers = () => {
-		this.setState({ users: [], loading: false });
-	};
-
-	render() {
-		return (
-			<div className='App'>
-				<NavBar />
-				<div className='container'>
-					<Search searchUsers={this.searchUsers} clearUsers={this.clearUsers} />
-					<Users loading={this.state.loading} users={this.state.users} />
+	return (
+		<GithubState>
+			<Router>
+				<div className='App'>
+					<NavBar />
+					<div className='container'>
+						<Alert alert={alert} />
+						<Routes>
+							<Route
+								path='/'
+								element={
+									<Fragment>
+										<Search setAlert={showAlert} />
+										<Users />
+									</Fragment>
+								}
+							/>
+							<Route path='/about' element={<About />} />
+							<Route path='/user/:login' element={<User />} />
+						</Routes>
+					</div>
 				</div>
-			</div>
-		);
-	}
-}
+			</Router>
+		</GithubState>
+	);
+};
 
 export default App;
